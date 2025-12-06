@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DualCast AI Studio Pro Max – client‑only demo of an AI‑powered two‑host podcast studio with live call‑in, lip‑synced avatars and episode generation."
+    />
+    <title>DualCast AI Studio Pro Max – Client Only</title>
+    <!-- Inline CSS to ensure styling works when loaded via file:// on mobile devices -->
+    <style>
+/*
+ * DualCast AI Studio Pro Max – Client Only Demo
+ *
+ * This stylesheet defines the dark neon frosted glass aesthetic. It uses CSS
+ * variables for primary colours and relies on the backdrop‑filter property
+ * (supported by modern browsers) to achieve the frosted effect, as
+ * recommended in guides on glassmorphism design【832107668889395†L119-L150】.
+ * The animations on avatars are deliberately simple to keep the page
+ * performant in a standalone environment.
+ */
+
+:root {
+  --bg-color: #0f131a;
+  --bg-gradient-start: #0f131a;
+  --bg-gradient-end: #141b23;
+  --accent: #00e5ff;
+  --accent-secondary: #9a00ff;
+  --text: #ffffff;
+  --frost-bg: rgba(255, 255, 255, 0.05);
+  --frost-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --shadow: rgba(0, 0, 0, 0.7);
+}
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-gradient-start),
+    var(--bg-gradient-end)
+  );
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  padding: 1rem 2rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-secondary);
+}
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  flex-wrap: wrap;
+}
+.nav-btn {
+  background: var(--frost-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.nav-btn:hover,
+.nav-btn.active {
+  background: var(--frost-bg-hover);
+  box-shadow: 0 0 10px 2px var(--accent-secondary);
+}
+.main {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+.section {
+  width: 100%;
+  max-width: 900px;
+  display: none;
+}
+.section.active {
+  display: block;
+}
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+.card {
+  background: var(--frost-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 20px var(--shadow);
+  transition: background 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+.card:hover {
+  background: var(--frost-bg-hover);
+  transform: translateY(-4px);
+}
+.empty-msg {
+  margin-top: 2rem;
+  text-align: center;
+  color: #888;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 600px;
+}
+.form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  gap: 0.25rem;
+}
+.form input,
+.form select {
+  background: var(--frost-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.5rem;
+  color: var(--text);
+  padding: 0.5rem;
+  font-size: 1rem;
+  outline: none;
+}
+.primary-btn {
+  background: var(--accent-secondary);
+  border: none;
+  border-radius: 0.5rem;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.primary-btn:hover {
+  background: var(--accent);
+}
+.status-msg {
+  margin-top: 1rem;
+  font-style: italic;
+  color: #aaa;
+}
+.studio-wrapper {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.avatar {
+  position: relative;
+  width: 150px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.avatar-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.head {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 10px var(--accent-secondary);
+}
+.eye {
+  position: absolute;
+  top: 45%;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+}
+.eye-left {
+  left: 35%;
+}
+.eye-right {
+  right: 35%;
+}
+.mouth {
+  position: absolute;
+  bottom: 25%;
+  width: 30px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  transform-origin: center;
+  transition: transform 0.05s linear;
+}
+.avatar.speaking .head {
+  box-shadow: 0 0 20px 4px var(--accent-secondary), 0 0 40px 8px var(--accent);
+}
+.avatar .name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.transcript {
+  max-height: 300px;
+  overflow-y: auto;
+  width: 100%;
+  background: var(--frost-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 20px var(--shadow);
+}
+.transcript p {
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+.transcript .host {
+  font-weight: 600;
+  color: var(--accent);
+}
+.transcript .user {
+  font-weight: 600;
+  color: var(--accent-secondary);
+}
+.callin-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 1rem;
+  gap: 0.5rem;
+}
+#callin-input {
+  flex: 1;
+  background: var(--frost-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: var(--text);
+  outline: none;
+}
+#callin-send {
+  background: var(--accent-secondary);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+#callin-send:hover {
+  background: var(--accent);
+}
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.host-settings {
+  background: var(--frost-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  flex: 1;
+  min-width: 250px;
+  box-shadow: 0 4px 20px var(--shadow);
+}
+.host-settings h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+.host-settings label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+}
+.host-settings input[type="range"] {
+  width: 60%;
+}
+.voice-selectors {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.voice-selectors select {
+  background: var(--frost-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.5rem;
+  padding: 0.3rem;
+  color: var(--text);
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+}
+.modal.hidden {
+  display: none;
+}
+.modal-content {
+  background: var(--frost-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px var(--shadow);
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.modal h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+.modal ul {
+  list-style: disc;
+  margin-left: 1.2rem;
+}
+.modal li {
+  margin-bottom: 0.4rem;
+}
+/* Audio control styling */
+.speech-control {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+.speech-control .primary-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+}
+
+/* Responsive adjustments for mobile screens */
+@media (max-width: 600px) {
+  .nav {
+    flex-direction: column;
+    align-items: center;
+  }
+  .nav-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .studio-wrapper {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .avatar {
+    width: 120px;
+    height: 170px;
+  }
+  .head {
+    width: 100px;
+    height: 100px;
+  }
+  .transcript {
+    max-height: 40vh;
+  }
+  .form {
+    max-width: 100%;
+  }
+  .callin-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #callin-input {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  #callin-send {
+    width: 100%;
+  }
+  .settings {
+    flex-direction: column;
+  }
+  .host-settings {
+    width: 100%;
+  }
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  /* Ensure the transcript and call‑in bar span the full available width on mobile */
+  .transcript {
+    width: 100%;
+    margin: 0;
+  }
+  .callin-bar {
+    width: 100%;
+    padding: 0 0.5rem;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <h1>DualCast AI Studio Pro Max</h1>
+    </header>
+    <nav class="nav">
+      <button class="nav-btn" data-section="library">Episode Library</button>
+      <button class="nav-btn" data-section="create">Create Episode</button>
+      <button class="nav-btn" data-section="studio">Live Studio</button>
+      <button class="nav-btn" data-section="settings">Settings</button>
+    </nav>
+    <main class="main">
+      <!-- Episode Library -->
+      <section id="library-section" class="section active">
+        <h2>Episode Library</h2>
+        <div id="library-list" class="card-list"></div>
+        <div id="empty-library" class="empty-msg">No episodes yet. Create one from the Create Episode tab.</div>
+      </section>
+      <!-- Create Episode -->
+      <section id="create-section" class="section">
+        <h2>Create Episode</h2>
+        <form id="create-form" class="form">
+          <label>
+            Topic:
+            <input type="text" id="topic-input" placeholder="e.g. AI ethics" required />
+          </label>
+          <label>
+            Tone:
+            <select id="tone-select">
+              <option value="fun">Fun</option>
+              <option value="deep">Deep</option>
+              <option value="investigative">Investigative</option>
+              <option value="motivational">Motivational</option>
+            </select>
+          </label>
+          <label>
+            Length:
+            <select id="length-select">
+              <option value="short">Short (5–10 min)</option>
+              <option value="standard">Standard (20–30 min)</option>
+              <option value="long">Long (45–60 min)</option>
+            </select>
+          </label>
+          <label>
+            Difficulty:
+            <select id="difficulty-select">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </label>
+          <button type="submit" class="primary-btn">Generate Episode</button>
+        </form>
+        <div id="generate-status" class="status-msg"></div>
+      </section>
+      <!-- Live Studio / Call‑In -->
+      <section id="studio-section" class="section">
+        <h2>Live Studio</h2>
+        <div class="studio-wrapper">
+          <div class="avatar" id="avatar-nova">
+            <div class="avatar-inner">
+              <div class="head">
+                <div class="eye eye-left"></div>
+                <div class="eye eye-right"></div>
+                <div class="mouth" id="mouth-nova"></div>
+              </div>
+              <div class="name">Nova</div>
+            </div>
+          </div>
+          <div class="avatar" id="avatar-atlas">
+            <div class="avatar-inner">
+              <div class="head">
+                <div class="eye eye-left"></div>
+                <div class="eye eye-right"></div>
+                <div class="mouth" id="mouth-atlas"></div>
+              </div>
+              <div class="name">Atlas</div>
+            </div>
+          </div>
+        </div>
+        <div id="transcript" class="transcript"></div>
+        <!-- Audio control for play/pause of speech synthesis -->
+        <div class="speech-control">
+          <button id="speech-control-btn" class="primary-btn">Pause Speech</button>
+        </div>
+        <div class="callin-bar">
+          <input
+            type="text"
+            id="callin-input"
+            placeholder="Type your question or comment and press Enter..."
+          />
+          <button id="callin-send" class="primary-btn">Send</button>
+        </div>
+      </section>
+      <!-- Settings -->
+      <section id="settings-section" class="section">
+        <h2>Host Settings & Personality Tuner</h2>
+        <div class="settings">
+          <div class="host-settings">
+            <h3>Nova</h3>
+            <label>Humor: <input type="range" id="nova-humor" min="0" max="1" step="0.1" value="0.7" /></label>
+            <label>Energy: <input type="range" id="nova-energy" min="0" max="1" step="0.1" value="0.8" /></label>
+            <label>Formality: <input type="range" id="nova-formality" min="0" max="1" step="0.1" value="0.4" /></label>
+            <label>Debate intensity: <input type="range" id="nova-debate" min="0" max="1" step="0.1" value="0.5" /></label>
+            <label>Empathy: <input type="range" id="nova-empathy" min="0" max="1" step="0.1" value="0.7" /></label>
+          </div>
+          <div class="host-settings">
+            <h3>Atlas</h3>
+            <label>Humor: <input type="range" id="atlas-humor" min="0" max="1" step="0.1" value="0.4" /></label>
+            <label>Energy: <input type="range" id="atlas-energy" min="0" max="1" step="0.1" value="0.3" /></label>
+            <label>Formality: <input type="range" id="atlas-formality" min="0" max="1" step="0.1" value="0.7" /></label>
+            <label>Debate intensity: <input type="range" id="atlas-debate" min="0" max="1" step="0.1" value="0.6" /></label>
+            <label>Empathy: <input type="range" id="atlas-empathy" min="0" max="1" step="0.1" value="0.6" /></label>
+          </div>
+        </div>
+        <div class="voice-selectors">
+          <div>
+            <label>Nova voice: <select id="nova-voice-select"></select></label>
+          </div>
+          <div>
+            <label>Atlas voice: <select id="atlas-voice-select"></select></label>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Episode Detail Modal -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <button id="modal-close" class="modal-close">×</button>
+        <h2 id="modal-title"></h2>
+        <p id="modal-description"></p>
+        <h3>Show Notes</h3>
+        <ul id="modal-notes"></ul>
+        <h3>Highlight Quotes</h3>
+        <ul id="modal-quotes"></ul>
+        <h3>Transcript</h3>
+        <ul id="modal-transcript"></ul>
+        <h3>Next Topic Suggestions</h3>
+        <ul id="modal-next-topics"></ul>
+      </div>
+    </div>
+    <!-- Inline JS to avoid dependency on external files when opened via file:// -->
+    <script>
+/*
+ * DualCast AI Studio Pro Max – Client Only Demo
+ *
+ * This script implements a simplified multi‑agent podcast studio entirely in
+ * client‑side JavaScript. It avoids external dependencies and bundlers, so
+ * the app can be opened directly from the file system without running
+ * `npm install` or any build commands. It demonstrates key features of
+ * the specification: two persistent AI hosts with distinct personalities,
+ * episode generation with scripted dialogue and metadata, a live call‑in
+ * interface, speech synthesis integration and rudimentary lip‑sync
+ * animations. The conversation heuristics are intentionally simple; in
+ * a production system these would be replaced with calls to an LLM or
+ * a more sophisticated multi‑agent framework such as AutoGen【860940447890483†L90-L100】.
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  const hosts = {
+    nova: {
+      id: 'nova',
+      name: 'Nova',
+      persona: { humor: 0.7, energy: 0.8, formality: 0.4, debate: 0.5, empathy: 0.7 },
+      mouthEl: document.getElementById('mouth-nova'),
+      avatarEl: document.getElementById('avatar-nova'),
+      voiceIndex: null,
+      mouthInterval: null,
+      googleVoice: 'en-US-Wavenet-F',
+    },
+    atlas: {
+      id: 'atlas',
+      name: 'Atlas',
+      persona: { humor: 0.4, energy: 0.3, formality: 0.7, debate: 0.6, empathy: 0.6 },
+      mouthEl: document.getElementById('mouth-atlas'),
+      avatarEl: document.getElementById('avatar-atlas'),
+      voiceIndex: null,
+      mouthInterval: null,
+      googleVoice: 'en-US-Wavenet-D',
+    },
+  };
+  // Flag to enable Google Cloud Text‑to‑Speech. When true, the app will
+  // request speech audio from Google’s TTS API using the provided API key.
+  // Set this to false by default to fall back to the browser's built‑in
+  // voices. You can toggle this in code or add a UI control if desired.
+  const USE_GOOGLE_CLOUD_TTS = false;
+  // API key for Google Cloud TTS. Replace with your own key. Keep this
+  // confidential and do not share it publicly.
+  const GOOGLE_TTS_API_KEY = 'AIzaSyBoJznjWCThYWagxthPzKTmD5ErpxFzu78';
+
+  // Fetch and play TTS audio from Google Cloud for a given host and text.
+  async function fetchGoogleTTS(hostId, text) {
+    const host = hosts[hostId];
+    const voiceName = host.googleVoice || 'en-US-Wavenet-D';
+    const requestBody = {
+      input: { text },
+      voice: { languageCode: voiceName.substring(0, 5), name: voiceName },
+      audioConfig: { audioEncoding: 'MP3' },
+    };
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      const data = await response.json();
+      if (data.audioContent) {
+        const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+        const audio = new Audio(audioSrc);
+        return new Promise((resolve) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => resolve();
+          audio.play();
+        });
+      }
+    } catch (err) {
+      console.warn('Google TTS request failed', err);
+    }
+    // On failure, resolve immediately
+    return Promise.resolve();
+  }
+  let episodes = [];
+  let currentEpisode = null;
+  const messageQueue = [];
+  let speaking = false;
+  let lastSpeaker = null;
+  const navButtons = document.querySelectorAll('.nav-btn');
+  const sections = document.querySelectorAll('.section');
+  const libraryList = document.getElementById('library-list');
+  const emptyLibraryMsg = document.getElementById('empty-library');
+  const createForm = document.getElementById('create-form');
+  const statusMsg = document.getElementById('generate-status');
+  const transcriptEl = document.getElementById('transcript');
+  const callInInput = document.getElementById('callin-input');
+  const callInSend = document.getElementById('callin-send');
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalDesc = document.getElementById('modal-description');
+  const modalNotes = document.getElementById('modal-notes');
+  const modalQuotes = document.getElementById('modal-quotes');
+  const modalTranscript = document.getElementById('modal-transcript');
+  const modalNextTopics = document.getElementById('modal-next-topics');
+  const modalClose = document.getElementById('modal-close');
+  const novaVoiceSelect = document.getElementById('nova-voice-select');
+  const atlasVoiceSelect = document.getElementById('atlas-voice-select');
+  function saveEpisodes() {
+    try { localStorage.setItem('dualcastEpisodes', JSON.stringify(episodes)); } catch (err) { console.warn('Failed to persist episodes', err); }
+  }
+  function loadEpisodes() {
+    const raw = localStorage.getItem('dualcastEpisodes');
+    if (raw) {
+      try { episodes = JSON.parse(raw) || []; } catch (err) { console.warn('Failed to parse episodes from storage', err); }
+    }
+  }
+  function renderLibrary() {
+    libraryList.innerHTML = '';
+    if (episodes.length === 0) {
+      emptyLibraryMsg.style.display = 'block';
+      return;
+    }
+    emptyLibraryMsg.style.display = 'none';
+    episodes.forEach((ep, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<h4>${escapeHtml(ep.title)}</h4><p class="meta">${escapeHtml(ep.date)}</p><p class="desc">${escapeHtml(ep.descriptionShort)}</p>`;
+      card.addEventListener('click', () => openEpisodeDetail(index));
+      libraryList.appendChild(card);
+    });
+  }
+  function escapeHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
+  function showSection(id) {
+    sections.forEach((sec) => {
+      sec.classList.toggle('active', sec.id === `${id}-section`);
+    });
+    navButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.section === id);
+    });
+  }
+  function generateEpisode(topic, tone, length, difficulty) {
+    const openers = [ () => `Welcome to DualCast! I'm Nova and I'm here with Atlas to dive into ${topic}.`, () => `Hey everyone, Nova and Atlas here with another episode of DualCast. We're excited to explore ${topic}.` ];
+    const atlasGreetings = [ () => `Hi Nova, glad to be back. ${capitalizeFirst(topic)} is such an interesting subject.`, () => `Always a pleasure, Nova. I'm eager to unpack ${topic} and share some frameworks.` ];
+    const topicSetups = [ () => `So Nova, how would you set the stage for a ${difficulty}-level discussion on ${topic}?`, () => `Let's start with the basics: what do listeners need to know about ${topic}?`, () => `To kick things off, what's your high‑level take on ${topic}?` ];
+    const novaDeepDives = [ () => `From my perspective, ${topic} touches everything from startups to culture. It's ${tone === 'fun' ? 'exciting' : tone === 'deep' ? 'fascinating' : 'important'}.`, () => `${capitalizeFirst(topic)} reminds me of stories in the creator economy—it shapes how people build and share ideas.`, () => `If we think about ${topic} through analogies, it's like a bridge between innovation and society, constantly evolving.` ];
+    const atlasDeepDives = [ () => `I like to map ${topic} into systems. Consider its inputs, outputs and feedback loops—it helps us understand long‑term impacts.`, () => `When you analyse ${topic} with mental models, you realise it's not just a trend but a paradigm shift.`, () => `Let's challenge our assumptions about ${topic}. What if the conventional wisdom is incomplete?` ];
+    const tensions = [ () => `Nova, I think you're focusing too much on the hype. We need to look at the unintended consequences of ${topic}.`, () => `Atlas, don't you think you're over‑complicating it? Sometimes ${topic} just comes down to human stories.` ];
+    const closings = [ () => `That's a wrap on ${topic}. Thanks for joining us on DualCast and stay curious!`, () => `We hope you enjoyed our conversation on ${topic}. Until next time, keep exploring.` ];
+    const numSegments = length === 'short' ? 4 : length === 'long' ? 8 : 6;
+    const transcript = [];
+    transcript.push({ speaker: 'nova', text: randomFrom(openers)() });
+    transcript.push({ speaker: 'atlas', text: randomFrom(atlasGreetings)() });
+    transcript.push({ speaker: 'nova', text: randomFrom(topicSetups)() });
+    transcript.push({ speaker: 'atlas', text: randomFrom(topicSetups)() });
+    for (let i = 0; i < numSegments - 3; i++) {
+      if (i % 2 === 0) { transcript.push({ speaker: 'nova', text: randomFrom(novaDeepDives)() }); } else { transcript.push({ speaker: 'atlas', text: randomFrom(atlasDeepDives)() }); }
+      if (Math.random() < 0.25) {
+        transcript.push({ speaker: 'atlas', text: tensions[0]() });
+        transcript.push({ speaker: 'nova', text: tensions[1]() });
+      }
+    }
+    transcript.push({ speaker: 'nova', text: randomFrom(closings)() });
+    transcript.push({ speaker: 'atlas', text: randomFrom(closings)() });
+    const title = `${capitalizeFirst(topic)} with Nova & Atlas`;
+    const descriptionShort = `A ${tone} ${difficulty}‑level chat about ${topic}.`;
+    const showNotes = [ `Introduction to ${topic}`, `Key perspectives from Nova and Atlas`, `Frameworks and analogies to understand ${topic}`, `Debates and different viewpoints` ];
+    const highlightQuotes = transcript.filter((_, idx) => idx < 6).map((t) => `${hosts[t.speaker].name}: ${t.text}`);
+    const nextTopics = [ `Future of ${topic}`, `Ethics of ${topic}`, `How ${topic} impacts creativity` ];
+    return { title, descriptionShort, date: new Date().toLocaleString(), topic, tone, length, difficulty, transcript, showNotes, highlightQuotes, nextTopics };
+  }
+  function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function capitalizeFirst(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
+  function appendToTranscript(who, text) {
+    const p = document.createElement('p');
+    const span = document.createElement('span');
+    span.className = who === 'user' ? 'user' : 'host';
+    span.textContent = who === 'user' ? 'You' : hosts[who].name;
+    p.appendChild(span);
+    p.appendChild(document.createTextNode(`: ${text}`));
+    transcriptEl.appendChild(p);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+  function speakMessage(hostId, text) {
+    messageQueue.push({ hostId, text });
+    processQueue();
+  }
+  function processQueue() {
+    if (speaking || messageQueue.length === 0) return;
+    const { hostId, text } = messageQueue.shift();
+    speaking = true;
+    lastSpeaker = hostId;
+    appendToTranscript(hostId, text);
+    // If Google Cloud TTS is enabled, fetch audio and play via network
+    if (USE_GOOGLE_CLOUD_TTS) {
+      const wordCount = text.trim().split(/\s+/).length;
+      const estimatedDuration = Math.max(800, (wordCount / 2.5) * 1000);
+      // Start lip sync immediately and stop after estimated duration or when audio ends
+      const fakeUtter = { rate: 0.8 + hosts[hostId].persona.energy * 0.3 };
+      startLipSync(hostId, fakeUtter);
+      fetchGoogleTTS(hostId, text).then(() => {
+        stopLipSync(hostId);
+        speaking = false;
+        setTimeout(processQueue, 200);
+      });
+      // Safety fallback in case audio never ends
+      setTimeout(() => {
+        if (speaking) {
+          stopLipSync(hostId);
+          speaking = false;
+          processQueue();
+        }
+      }, estimatedDuration + 1000);
+    } else {
+      // Fallback to the browser's speech synthesis API
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        const index = hosts[hostId].voiceIndex;
+        if (typeof index === 'number' && index >= 0 && voices[index]) { utter.voice = voices[index]; }
+      }
+      // Slow down default speech rate for more natural pacing
+      utter.rate = 0.8 + hosts[hostId].persona.energy * 0.3;
+      utter.pitch = 1 + (0.5 - hosts[hostId].persona.formality) * 0.4;
+      startLipSync(hostId, utter);
+      const wordCount = text.trim().split(/\s+/).length;
+      const estimatedDuration = Math.max(800, (wordCount / 2.5) * 1000);
+      let fallbackTimer;
+      utter.onend = () => {
+        clearTimeout(fallbackTimer);
+        stopLipSync(hostId);
+        speaking = false;
+        setTimeout(processQueue, 200);
+      };
+      if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speak) {
+        speechSynthesis.speak(utter);
+        fallbackTimer = setTimeout(() => {
+          try { speechSynthesis.cancel(); } catch (err) {}
+          if (speaking) {
+            stopLipSync(hostId);
+            speaking = false;
+            processQueue();
+          }
+        }, estimatedDuration + 300);
+      } else {
+        setTimeout(() => {
+          stopLipSync(hostId);
+          speaking = false;
+          processQueue();
+        }, estimatedDuration);
+      }
+    }
+  }
+  function startLipSync(hostId, utter) {
+    const host = hosts[hostId];
+    host.avatarEl.classList.add('speaking');
+    const baseInterval = 120;
+    const interval = baseInterval / utter.rate;
+    host.mouthInterval = setInterval(() => {
+      const scaleY = 1 + Math.random() * 2;
+      host.mouthEl.style.transform = `scaleY(${scaleY})`;
+    }, interval);
+  }
+  function stopLipSync(hostId) {
+    const host = hosts[hostId];
+    host.avatarEl.classList.remove('speaking');
+    if (host.mouthInterval) { clearInterval(host.mouthInterval); host.mouthInterval = null; }
+    host.mouthEl.style.transform = 'scaleY(1)';
+  }
+  function handleCallIn() {
+    const text = callInInput.value.trim();
+    if (!text) return;
+    appendToTranscript('user', text);
+    callInInput.value = '';
+    const responder = lastSpeaker === 'nova' ? 'atlas' : 'nova';
+    const replyOptions = [ () => `Thanks for that insight. ${capitalizeFirst(text)} is a great point that ties back to our topic.`, () => `Interesting question! My take is that ${text.toLowerCase()} shows how this affects real people.`, () => `Appreciate your comment. It adds nuance to the ${currentEpisode ? currentEpisode.topic : 'discussion'}.` ];
+    const reply = randomFrom(replyOptions)();
+    speakMessage(responder, reply);
+  }
+  function populateVoices() {
+    const voices = speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return;
+    [novaVoiceSelect, atlasVoiceSelect].forEach((select) => {
+      select.innerHTML = '';
+      voices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        select.appendChild(option);
+      });
+    });
+    // Prefer premium Google voices when available. On many mobile devices
+    // and desktop browsers, the Web Speech API exposes high quality
+    // voices with names beginning with "Google" (e.g. "Google US English", "Google UK English Female").
+    // We'll search for these before falling back to gender heuristics.
+    const googleVoices = voices.filter((v) => /Google/i.test(v.name));
+    if (googleVoices.length > 0) {
+      // Attempt to choose distinct voices for Nova and Atlas
+      hosts.nova.voiceIndex = voices.indexOf(googleVoices[0]);
+      hosts.atlas.voiceIndex = voices.indexOf(googleVoices[1] || googleVoices[0]);
+    } else {
+      // Fallback to gender heuristics
+      const femaleIdx = voices.findIndex((v) => /female|feminine/i.test(v.name));
+      const maleIdx = voices.findIndex((v) => /male|masculine/i.test(v.name));
+      hosts.nova.voiceIndex = femaleIdx >= 0 ? femaleIdx : 0;
+      hosts.atlas.voiceIndex = maleIdx >= 0 ? maleIdx : (femaleIdx >= 0 ? femaleIdx : 1);
+    }
+    novaVoiceSelect.value = hosts.nova.voiceIndex;
+    atlasVoiceSelect.value = hosts.atlas.voiceIndex;
+  }
+  navButtons.forEach((btn) => {
+    btn.addEventListener('click', () => { showSection(btn.dataset.section); });
+  });
+  createForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const topic = document.getElementById('topic-input').value.trim();
+    const tone = document.getElementById('tone-select').value;
+    const length = document.getElementById('length-select').value;
+    const difficulty = document.getElementById('difficulty-select').value;
+    if (!topic) return;
+    statusMsg.textContent = 'Generating episode...';
+    const ep = generateEpisode(topic, tone, length, difficulty);
+    episodes.unshift(ep);
+    saveEpisodes();
+    renderLibrary();
+    statusMsg.textContent = 'Episode generated! You can find it in your library or head to the Live Studio.';
+    currentEpisode = ep;
+    createForm.reset();
+    showSection('library');
+  });
+  novaVoiceSelect.addEventListener('change', (e) => { hosts.nova.voiceIndex = parseInt(e.target.value, 10); });
+  atlasVoiceSelect.addEventListener('change', (e) => { hosts.atlas.voiceIndex = parseInt(e.target.value, 10); });
+  document.querySelectorAll('#settings-section input[type="range"]').forEach((input) => {
+    input.addEventListener('input', (e) => {
+      const [id, prop] = e.target.id.split('-');
+      hosts[id].persona[prop] = parseFloat(e.target.value);
+    });
+  });
+  callInSend.addEventListener('click', handleCallIn);
+  callInInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleCallIn(); } });
+  modalClose.addEventListener('click', () => { modal.classList.add('hidden'); });
+  function openEpisodeDetail(index) {
+    const ep = episodes[index];
+    if (!ep) return;
+    modalTitle.textContent = ep.title;
+    modalDesc.textContent = ep.descriptionShort;
+    modalNotes.innerHTML = '';
+    ep.showNotes.forEach((note) => { const li = document.createElement('li'); li.textContent = note; modalNotes.appendChild(li); });
+    modalQuotes.innerHTML = '';
+    ep.highlightQuotes.forEach((quote) => { const li = document.createElement('li'); li.textContent = quote; modalQuotes.appendChild(li); });
+    modalTranscript.innerHTML = '';
+    ep.transcript.forEach((line) => { const li = document.createElement('li'); li.textContent = `${hosts[line.speaker].name}: ${line.text}`; modalTranscript.appendChild(li); });
+    modalNextTopics.innerHTML = '';
+    ep.nextTopics.forEach((nt) => { const li = document.createElement('li'); li.textContent = nt; modalNextTopics.appendChild(li); });
+    modal.classList.remove('hidden');
+  }
+  function playCurrentEpisode() {
+    if (!currentEpisode) return;
+    transcriptEl.innerHTML = '';
+    currentEpisode.transcript.forEach((line) => { speakMessage(line.speaker, line.text); });
+  }
+  loadEpisodes();
+  renderLibrary();
+  if (episodes.length > 0) { currentEpisode = episodes[0]; }
+  showSection('library');
+  populateVoices();
+  if (typeof speechSynthesis !== 'undefined') { window.speechSynthesis.onvoiceschanged = populateVoices; }
+  document.querySelector('[data-section="studio"]').addEventListener('click', () => { playCurrentEpisode(); });
+
+  // Speech control (play/pause) for the Web Speech API
+  const speechControlBtn = document.getElementById('speech-control-btn');
+  let speechPaused = false;
+  speechControlBtn.addEventListener('click', () => {
+    if (typeof speechSynthesis !== 'undefined') {
+      if (speechPaused) {
+        try { speechSynthesis.resume(); } catch (err) {}
+        speechPaused = false;
+        speechControlBtn.textContent = 'Pause Speech';
+      } else {
+        try { speechSynthesis.pause(); } catch (err) {}
+        speechPaused = true;
+        speechControlBtn.textContent = 'Resume Speech';
+      }
+    }
+  });
+});
+    </script>
+  </body>
+</html>
